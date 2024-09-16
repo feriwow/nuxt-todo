@@ -4,9 +4,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt'],
   nitro: {
-    externals: {
-      inline: ["uuid"]
-    }
+    preset: 'netlify', // Ensures proper handling of API routes in Netlify
   },
   runtimeConfig: {
     public: {

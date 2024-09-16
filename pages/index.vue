@@ -40,44 +40,50 @@
 </template>
 
 <script setup>
-const { data: todos, refresh } = await useFetch('/api/todos')
+import { useTodoStore } from '~/stores/todoStore'
+import { ref, onMounted } from 'vue'
+import moment from 'moment'
+
+const todoStore = useTodoStore()
 const newTodo = ref('')
-import moment from 'moment';
+
+onMounted(async () => {
+  const { data: fetchedTodos } = await useFetch('/api/todos')
+  todoStore.setTodos(fetchedTodos.value || [])  
+})
 
 async function addTodo() {
-    if (newTodo.value.trim()) {
-        await $fetch('/api/todos', {
-            method: 'POST',
-            body: { title: newTodo.value }
-        })
-        newTodo.value = ''
-        refresh()
-    }
+  if (newTodo.value.trim()) {
+    const todo = await $fetch('/api/todos', {
+      method: 'POST',
+      body: { title: newTodo.value }
+    })
+    todoStore.addTodo(todo)
+    newTodo.value = ''
+  }
 }
 
 async function updateTodo(todo) {
-    await $fetch('/api/todos', {
-        method: 'PUT',
-        body: todo
-    })
-    Object.assign(todo, updateTodo)
-    refresh()
+  await $fetch('/api/todos', {
+    method: 'PUT',
+    body: todo
+  })
+  todoStore.updateTodo(todo)
 }
 
 async function deleteTodo(id) {
-    await $fetch('/api/todos', {
-        method: 'DELETE',
-        body: { id }
-    })
-    refresh()
+  await $fetch('/api/todos', {
+    method: 'DELETE',
+    body: { id }
+  })
+  todoStore.deleteTodo(id)
 }
 
 function formatDate(dateString) {
-    return moment(dateString).format('D MMMM YYYY')
+  return moment(dateString).format('D MMMM YYYY')
 }
 
 const generateTask = async () => {
-    await useFetch('/api/chatgpt', { method: 'POST' })
-    refresh()
+  await useFetch('/api/chatgpt', { method: 'POST' })
 }
 </script>

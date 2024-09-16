@@ -13,11 +13,14 @@
                     class="text-gray-900 bg-white hover:bg-gray-300 font-medium rounded-lg text-sm px-3 py-2 me-2 mb-2 ml-2 dark:bg-gray-200 dark:hover:bg-gray-300 focus:outline-none active:ring-4 active:ring-gray-300 dark:active:ring-gray-400 transition-all duration-75 ease-in-out">
                     Add Task
                 </button>
-                <button @click="generateTask" class="text-white bg-green-700 hover:bg-green-800 font-medium rounded-lg text-sm px-3 py-2 me-2 mb-2 ml-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none active:ring-4 active:ring-green-300 dark:active:ring-green-800 transition-all duration-75 ease-in-out">Recommend Task</button>
+                <button @click="generateTask"
+                    class="text-white bg-green-700 hover:bg-green-800 font-medium rounded-lg text-sm px-3 py-2 me-2 mb-2 ml-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none active:ring-4 active:ring-green-300 dark:active:ring-green-800 transition-all duration-75 ease-in-out">Recommend
+                    Task</button>
             </form>
 
         </div>
-        <h1 class="flex items-center justify-center mt-4" v-if="todos.length === 0">You have not added any activity to your bucket list yet</h1>
+        <h1 class="flex items-center justify-center mt-4" v-if="todos.length === 0">You have not added any activity to
+            your bucket list yet</h1>
         <div class="flex items-center justify-center w-f max-w-lg mx-auto">
             <!-- <h1>{{ todos }}</h1> -->
             <ul class="w-full">
@@ -40,50 +43,44 @@
 </template>
 
 <script setup>
-import { useTodoStore } from '~/stores/todoStore'
-import { ref, onMounted } from 'vue'
-import moment from 'moment'
-
-const todoStore = useTodoStore()
+const { data: todos, refresh } = await useFetch('/api/todos')
 const newTodo = ref('')
-
-onMounted(async () => {
-  const { data: fetchedTodos } = await useFetch('/api/todos')
-  todoStore.setTodos(fetchedTodos.value || [])  
-})
+import moment from 'moment';
 
 async function addTodo() {
-  if (newTodo.value.trim()) {
-    const todo = await $fetch('/api/todos', {
-      method: 'POST',
-      body: { title: newTodo.value }
-    })
-    todoStore.addTodo(todo)
-    newTodo.value = ''
-  }
+    if (newTodo.value.trim()) {
+        await $fetch('/api/todos', {
+            method: 'POST',
+            body: { title: newTodo.value }
+        })
+        newTodo.value = ''
+        refresh()
+    }
 }
 
 async function updateTodo(todo) {
-  await $fetch('/api/todos', {
-    method: 'PUT',
-    body: todo
-  })
-  todoStore.updateTodo(todo)
+    await $fetch('/api/todos', {
+        method: 'PUT',
+        body: todo
+    })
+    Object.assign(todo, updateTodo)
+    refresh()
 }
 
 async function deleteTodo(id) {
-  await $fetch('/api/todos', {
-    method: 'DELETE',
-    body: { id }
-  })
-  todoStore.deleteTodo(id)
+    await $fetch('/api/todos', {
+        method: 'DELETE',
+        body: { id }
+    })
+    refresh()
 }
 
 function formatDate(dateString) {
-  return moment(dateString).format('D MMMM YYYY')
+    return moment(dateString).format('D MMMM YYYY')
 }
 
 const generateTask = async () => {
-  await useFetch('/api/chatgpt', { method: 'POST' })
+    await $fetch('/api/chatgpt', { method: 'POST' })
+    refresh()
 }
 </script>

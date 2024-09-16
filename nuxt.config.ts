@@ -11,4 +11,5 @@ export default defineNuxtConfig({
       openaiApiKey: process.env.OPENAI_API_KEY,
     },
   },
+  ssr: true,
 })

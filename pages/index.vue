@@ -5,17 +5,32 @@
                 What's on today's task list?
             </h1>
         </section>
-        <div class="w-10/12 max-w-lg mx-auto flex items-center justify-center mt-7 bg-white shadow p-5 rounded">
-            <form @submit.prevent="addTodo" action="">
+        <div class="w-10/12 max-w-lg mx-auto mt-7 bg-white shadow p-5 rounded">
+            <form @submit.prevent="addTodo" class="flex flex-wrap items-center justify-center gap-2">
                 <input v-model="newTodo" type="text" placeholder="Add a task"
-                    class="py-2 px-4 border border-blue-200 focus:outline-blue-300 rounded">
-                <button type="submit"
-                    class="text-gray-900 bg-white hover:bg-gray-300 font-medium rounded-lg text-sm px-3 py-2 me-2 mb-2 ml-2 dark:bg-gray-200 dark:hover:bg-gray-300 focus:outline-none active:ring-4 active:ring-gray-300 dark:active:ring-gray-400 transition-all duration-75 ease-in-out">
-                    Add Task
-                </button>
-                <button @click="generateTask"
-                    class="text-white bg-green-700 hover:bg-green-800 font-medium rounded-lg text-sm px-3 py-2 me-2 mb-2 ml-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none active:ring-4 active:ring-green-300 dark:active:ring-green-800 transition-all duration-75 ease-in-out">Recommend
-                    Task</button>
+                    class="flex-grow py-2 px-4 border border-blue-200 focus:outline-blue-300 rounded">
+                <div class="flex gap-2">
+                    <button type="submit"
+                        class="text-gray-900 bg-white hover:bg-gray-300 font-medium rounded-lg text-sm px-3 py-2 dark:bg-gray-200 dark:hover:bg-gray-300 focus:outline-none active:ring-4 active:ring-gray-300 dark:active:ring-gray-400 transition-all duration-75 ease-in-out">
+                        Add Task
+                    </button>
+                    <button @click.prevent="generateTask" :disabled="isGenerating"
+                        class="text-white bg-green-700 hover:bg-green-800 font-medium rounded-lg text-sm px-3 py-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none active:ring-4 active:ring-green-300 dark:active:ring-green-800 transition-all duration-75 ease-in-out flex items-center justify-center min-w-[140px]">
+                        <span v-if="!isGenerating">Recommend Task</span>
+                        <span v-else class="flex items-center">
+                            <svg class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4">
+                                </circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            Loading...
+                        </span>
+                    </button>
+                </div>
             </form>
         </div>
         <h1 class="flex items-center justify-center mt-4" v-if="todos.length === 0">You have not added any activity to
@@ -47,6 +62,7 @@ import moment from 'moment'
 
 const todoStore = useTodoStore()
 const newTodo = ref('')
+const isGenerating = ref(false)
 
 const todos = computed(() => todoStore.todos)
 
@@ -74,7 +90,15 @@ function formatDate(dateString) {
 }
 
 const generateTask = async () => {
-    await $fetch('/api/chatgpt', { method: 'POST' })
-    todoStore.fetchTodos()
+    if (isGenerating.value) return
+    isGenerating.value = true
+    try {
+        await $fetch('/api/chatgpt', { method: 'POST' })
+        await todoStore.fetchTodos()
+    } catch (error) {
+        console.error('Error generating task:', error)
+    } finally {
+        isGenerating.value = false
+    }
 }
 </script>

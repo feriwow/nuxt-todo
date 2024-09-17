@@ -17,12 +17,10 @@
                     class="text-white bg-green-700 hover:bg-green-800 font-medium rounded-lg text-sm px-3 py-2 me-2 mb-2 ml-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none active:ring-4 active:ring-green-300 dark:active:ring-green-800 transition-all duration-75 ease-in-out">Recommend
                     Task</button>
             </form>
-
         </div>
         <h1 class="flex items-center justify-center mt-4" v-if="todos.length === 0">You have not added any activity to
             your bucket list yet</h1>
         <div class="flex items-center justify-center w-f max-w-lg mx-auto">
-            <!-- <h1>{{ todos }}</h1> -->
             <ul class="w-full">
                 <li v-for="todo in todos" :key="todo.id" class="mt-4 bg-white p-4 flex items-center justify-between">
                     <div class="flex flex-col">
@@ -43,36 +41,32 @@
 </template>
 
 <script setup>
-const { data: todos, refresh } = await useFetch('/api/todos')
+import { ref, onMounted, computed } from 'vue'
+import { useTodoStore } from '@/stores/todoStore'
+import moment from 'moment'
+
+const todoStore = useTodoStore()
 const newTodo = ref('')
-import moment from 'moment';
+
+const todos = computed(() => todoStore.todos)
+
+onMounted(() => {
+    todoStore.fetchTodos()
+})
 
 async function addTodo() {
     if (newTodo.value.trim()) {
-        await $fetch('/api/todos', {
-            method: 'POST',
-            body: { title: newTodo.value }
-        })
+        await todoStore.addTodo({ title: newTodo.value })
         newTodo.value = ''
-        refresh()
     }
 }
 
 async function updateTodo(todo) {
-    await $fetch('/api/todos', {
-        method: 'PUT',
-        body: todo
-    })
-    Object.assign(todo, updateTodo)
-    refresh()
+    await todoStore.updateTodo(todo)
 }
 
 async function deleteTodo(id) {
-    await $fetch('/api/todos', {
-        method: 'DELETE',
-        body: { id }
-    })
-    refresh()
+    await todoStore.deleteTodo(id)
 }
 
 function formatDate(dateString) {
@@ -81,6 +75,6 @@ function formatDate(dateString) {
 
 const generateTask = async () => {
     await $fetch('/api/chatgpt', { method: 'POST' })
-    refresh()
+    todoStore.fetchTodos()
 }
 </script>

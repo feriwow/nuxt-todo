@@ -1,7 +1,0 @@
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions-internal/server"
-  status = 200
-
-[dev]
-  framework = "nuxt"
